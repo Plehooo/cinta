@@ -5,6 +5,8 @@
     <application
         android:name=".CintaApplication"
         android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:label="Cinta Widget"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
