@@ -276,6 +276,11 @@ class PhotoSyncRepository(private val context: Context) {
         supabase.auth.updateUser { password = newPassword }
     }
 
+    @OptIn(SupabaseExperimental::class)
+    suspend fun signInAnonymouslyIfNeeded() {
+        if (supabase.auth.currentUserOrNull() == null) supabase.auth.signInAnonymously()
+    }
+
     fun photoStatus(uid: String): String =
         settings.getString("own-photo-status:$uid", "Belum ada foto yang dikirim") ?: "Belum ada foto yang dikirim"
 

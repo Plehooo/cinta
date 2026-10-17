@@ -120,6 +120,18 @@ private fun CintaHome() {
     }
 
     LaunchedEffect(Unit) {
+        if (!SupabaseProvider.configured) return@LaunchedEffect
+        try {
+            SupabaseProvider.client.auth.awaitInitialization()
+            repository.signInAnonymouslyIfNeeded()
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (_: Throwable) {
+            message = "Tidak bisa membuat akun otomatis. Pastikan internet aktif dan anonymous sign-ins menyala di Supabase."
+        }
+    }
+
+    LaunchedEffect(Unit) {
         if (!SupabaseProvider.configured) {
             message = "Konfigurasi Supabase belum diisi. Tambahkan supabaseUrl dan supabasePublishableKey saat build."
             return@LaunchedEffect
