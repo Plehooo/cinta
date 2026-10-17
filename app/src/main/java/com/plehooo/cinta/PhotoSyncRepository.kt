@@ -10,6 +10,8 @@ import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.storage.storage
 import io.github.jan.supabase.postgrest.query.filter.FilterOperation
 import io.github.jan.supabase.postgrest.query.filter.FilterOperator
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonObject
 import io.github.jan.supabase.realtime.selectAsFlow
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.cancelAndJoin
@@ -106,12 +108,12 @@ class PhotoSyncRepository(private val context: Context) {
         val bytes = ByteArray(24).also { SecureRandom().nextBytes(it) }
         val code = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes)
         val hash = PhotoFiles.sha256(code.toByteArray(Charsets.UTF_8))
-        supabase.postgrest.rpc("create_pairing_code", CodeHashParams(hash))
+        supabase.postgrest.rpc("create_pairing_code", Json.encodeToJsonElement(CodeHashParams(hash)).jsonObject)
         return code
     }
 
     suspend fun redeemCode(code: String): Boolean {
-        val result = supabase.postgrest.rpc("redeem_pairing_code", RedeemCodeParams(code.trim()))
+        val result = supabase.postgrest.rpc("redeem_pairing_code", Json.encodeToJsonElement(RedeemCodeParams(code.trim())).jsonObject)
             .decodeAs<String?>()
         if (result.isNullOrBlank()) return false
         SyncScheduler.enqueueNow(context)
@@ -177,13 +179,13 @@ class PhotoSyncRepository(private val context: Context) {
 
             val result = supabase.postgrest.rpc(
                 "publish_member_photo",
-                PublishPhotoParams(
+                Json.encodeToJsonElement(PublishPhotoParams(
                     coupleId = queued.coupleId,
                     objectPath = objectPath,
                     caption = queued.caption.ifBlank { null },
                     contentHash = queuedHash,
                     expectedVersion = queued.expectedVersion
-                )
+                )).jsonObject
             ).decodeList<MemberPhoto>()
             val published = result.firstOrNull() ?: error("Server tidak mengonfirmasi metadata foto.")
 
