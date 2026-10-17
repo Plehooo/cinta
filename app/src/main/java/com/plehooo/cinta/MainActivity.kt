@@ -120,6 +120,10 @@ private fun CintaHome() {
     }
 
     LaunchedEffect(Unit) {
+        if (SupabaseProvider.configured) RealtimeService.start(context.applicationContext)
+    }
+
+    LaunchedEffect(Unit) {
         if (!SupabaseProvider.configured) return@LaunchedEffect
         try {
             SupabaseProvider.client.auth.awaitInitialization()

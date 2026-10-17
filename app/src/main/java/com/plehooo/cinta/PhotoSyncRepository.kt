@@ -194,6 +194,7 @@ class PhotoSyncRepository(private val context: Context) {
             if (oldOwnPhoto != null && oldOwnPhoto.objectPath != objectPath) {
                 runCatching { supabase.storage.from("couple-photos").delete(oldOwnPhoto.objectPath) }
             }
+            runCatching { cleanupOwnOldPhotos(queued.coupleId, uid, objectPath) }
             settings.edit().putInt("own-version:$uid", published.version)
                 .putString("own-photo-status:$uid", "Foto terkirim ke widget pasangan")
                 .remove("own-photo-error:$uid").apply()
@@ -279,6 +280,14 @@ class PhotoSyncRepository(private val context: Context) {
     @OptIn(SupabaseExperimental::class)
     suspend fun signInAnonymouslyIfNeeded() {
         if (supabase.auth.currentUserOrNull() == null) supabase.auth.signInAnonymously()
+    }
+
+    suspend fun cleanupOwnOldPhotos(coupleId: String, uid: String, keepPath: String) {
+        val bucket = supabase.storage.from("couple-photos")
+        val folder = "$coupleId/$uid"
+        bucket.list(folder).map { "$folder/${it.name}" }
+            .filter { it != keepPath && it.endsWith(".webp") }
+            .forEach { bucket.delete(it) }
     }
 
     fun photoStatus(uid: String): String =
