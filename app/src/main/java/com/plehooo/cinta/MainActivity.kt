@@ -212,6 +212,7 @@ private fun CintaHome() {
                         ) { Text("Daftar") }
                     }
                 }
+                ForgotPasswordCard(repository, email) { message = it }
             } else {
                 Card(colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(24.dp)) {
                     Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -323,6 +324,8 @@ private fun CintaHome() {
                         }
                     }
                 }
+
+                AccountCard(repository) { message = it }
 
                 OutlinedButton(enabled = !busy, onClick = {
                     scope.launch {

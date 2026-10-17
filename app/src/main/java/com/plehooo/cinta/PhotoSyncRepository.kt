@@ -5,6 +5,7 @@ import android.util.Log
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.annotations.SupabaseExperimental
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.auth.OtpType
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.storage.storage
@@ -256,6 +257,23 @@ class PhotoSyncRepository(private val context: Context) {
         WidgetCache.clearPartnerCaches(context)
         settings.edit().remove("last-couple:$uid").remove("last-partner:$uid")
             .remove("own-photo-error:$uid").putString("own-photo-status:$uid", "Pasangan terputus").apply()
+    }
+
+    suspend fun sendResetCode(email: String) {
+        supabase.auth.resetPasswordForEmail(email.trim())
+    }
+
+    suspend fun resetPasswordWithCode(email: String, code: String, newPassword: String) {
+        supabase.auth.verifyEmailOtp(type = OtpType.Email.RECOVERY, email = email.trim(), token = code.trim())
+        supabase.auth.updateUser { password = newPassword }
+    }
+
+    suspend fun changeEmail(newEmail: String) {
+        supabase.auth.updateUser { email = newEmail.trim() }
+    }
+
+    suspend fun changePassword(newPassword: String) {
+        supabase.auth.updateUser { password = newPassword }
     }
 
     fun photoStatus(uid: String): String =
