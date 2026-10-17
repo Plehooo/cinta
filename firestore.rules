@@ -1,0 +1,177 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function self(uid) { return signedIn() && request.auth.uid == uid; }
+    function activeMember(coupleId) {
+      let couplePath = /databases/$(database)/documents/couples/$(coupleId);
+      return signedIn() && exists(couplePath) &&
+        get(couplePath).data.status == 'active' &&
+        request.auth.uid in get(couplePath).data.members;
+    }
+    function validCaption() {
+      return !('caption' in request.resource.data) ||
+        (request.resource.data.caption is string && request.resource.data.caption.size() <= 500);
+    }
+    function validSlot() {
+      return request.resource.data.keys().hasOnly([
+        'mediaId', 'storagePath', 'thumbnailPath', 'caption', 'mode', 'rotationIds',
+        'intervalMinutes', 'source', 'widgetImageUrl', 'widgetImagePath', 'widgetImageOwnerUid',
+        'updatedBy', 'updatedAt'
+      ]) &&
+      request.resource.data.mediaId is string && request.resource.data.mediaId.size() > 0 && request.resource.data.mediaId.size() <= 80 &&
+      request.resource.data.rotationIds is list && request.resource.data.rotationIds.size() <= 100 &&
+      request.resource.data.mediaId in request.resource.data.rotationIds &&
+      request.resource.data.storagePath is string && request.resource.data.storagePath.size() <= 1024 &&
+      (request.resource.data.thumbnailPath == null ||
+        (request.resource.data.thumbnailPath is string && request.resource.data.thumbnailPath.size() <= 1024)) &&
+      request.resource.data.caption is string && request.resource.data.caption.size() <= 120 &&
+      request.resource.data.mode in ['MANUAL', 'SLIDESHOW'] &&
+      request.resource.data.intervalMinutes in [30, 60, 180, 360, 720, 1440] &&
+      (!('widgetImageUrl' in request.resource.data) || request.resource.data.widgetImageUrl == null ||
+        (request.resource.data.widgetImageUrl is string && request.resource.data.widgetImageUrl.size() <= 4096)) &&
+      (!('widgetImagePath' in request.resource.data) || request.resource.data.widgetImagePath == null ||
+        (request.resource.data.widgetImagePath is string && request.resource.data.widgetImagePath.size() <= 256)) &&
+      (!('widgetImageOwnerUid' in request.resource.data) || request.resource.data.widgetImageOwnerUid == null ||
+        (request.resource.data.widgetImageOwnerUid is string && request.resource.data.widgetImageOwnerUid.size() <= 128)) &&
+      request.resource.data.updatedBy == request.auth.uid &&
+      request.resource.data.updatedAt is timestamp;
+    }
+    function validWidgetOnlySharedSlot(coupleId) {
+      let couplePath = /databases/$(database)/documents/couples/$(coupleId);
+      return activeMember(coupleId) &&
+        request.resource.data.source == 'shared' &&
+        request.resource.data.mediaId is string &&
+        request.resource.data.mediaId.matches('widget-[A-Za-z0-9-]{36}') &&
+        request.resource.data.storagePath == 'widget-only' &&
+        request.resource.data.thumbnailPath == null &&
+        request.resource.data.widgetImageOwnerUid is string &&
+        request.resource.data.widgetImageOwnerUid in get(couplePath).data.members &&
+        request.resource.data.widgetImagePath is string &&
+        request.resource.data.widgetImagePath.matches('users/' + request.resource.data.widgetImageOwnerUid + '/[A-Za-z0-9-]+\\.jpg') &&
+        request.resource.data.widgetImageUrl is string &&
+        request.resource.data.widgetImageUrl.matches('https://[a-z0-9-]+\\.supabase\\.co/storage/v1/object/sign/galeri-widget/' + request.resource.data.widgetImagePath + '\\?token=.*');
+    }
+    function referencesOwnPrivateMedia(uid) {
+      let mediaPath = /databases/$(database)/documents/users/$(uid)/privateMedia/$(request.resource.data.mediaId);
+      return exists(mediaPath) &&
+        get(mediaPath).data.ownerUid == uid &&
+        get(mediaPath).data.storagePath == request.resource.data.storagePath &&
+        get(mediaPath).data.thumbnailPath == request.resource.data.thumbnailPath;
+    }
+    function referencesSharedMedia(coupleId) {
+      let mediaPath = /databases/$(database)/documents/couples/$(coupleId)/sharedMedia/$(request.resource.data.mediaId);
+      return activeMember(coupleId) && exists(mediaPath) &&
+        get(mediaPath).data.storagePath == request.resource.data.storagePath &&
+        get(mediaPath).data.thumbnailPath == request.resource.data.thumbnailPath;
+    }
+    function validPersonalSlot(uid) {
+      let profilePath = /databases/$(database)/documents/users/$(uid);
+      let profile = get(profilePath);
+      return validSlot() && request.resource.data.source == 'private' &&
+        (referencesOwnPrivateMedia(uid) ||
+          (profile.data.coupleId is string && referencesSharedMedia(profile.data.coupleId)));
+    }
+    function validSharedSlot(coupleId) {
+      return validSlot() && request.resource.data.source == 'shared' &&
+        (referencesSharedMedia(coupleId) || validWidgetOnlySharedSlot(coupleId));
+    }
+
+    match /users/{uid} {
+      allow read: if self(uid);
+      allow create: if self(uid) &&
+        request.resource.data.keys().hasOnly(['displayName', 'photoUrl', 'coupleId', 'createdAt', 'updatedAt']) &&
+        request.resource.data.coupleId == null &&
+        request.resource.data.displayName is string && request.resource.data.displayName.size() <= 80;
+      allow update: if self(uid) &&
+        request.resource.data.coupleId == resource.data.coupleId &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'photoUrl', 'updatedAt']);
+      allow delete: if false;
+
+      match /privateMedia/{mediaId} {
+        allow read: if self(uid);
+        allow create: if self(uid) &&
+          request.resource.data.keys().hasOnly(['ownerUid', 'caption', 'storagePath', 'thumbnailPath', 'mimeType', 'visibility', 'createdAt', 'updatedAt']) &&
+          request.resource.data.keys().hasAll(['ownerUid', 'caption', 'storagePath', 'thumbnailPath', 'mimeType', 'visibility', 'createdAt', 'updatedAt']) &&
+          request.resource.data.ownerUid == uid &&
+          request.resource.data.visibility == 'private' &&
+          request.resource.data.storagePath == 'users/' + uid + '/private/' + mediaId + '/original' &&
+          (request.resource.data.thumbnailPath == null || request.resource.data.thumbnailPath == 'users/' + uid + '/private/' + mediaId + '/thumbnail.jpg') &&
+          request.resource.data.mimeType is string && request.resource.data.mimeType.size() <= 100 &&
+          request.resource.data.createdAt is timestamp && request.resource.data.updatedAt is timestamp &&
+          validCaption();
+        allow update: if self(uid) && resource.data.ownerUid == uid &&
+          request.resource.data.ownerUid == resource.data.ownerUid &&
+          request.resource.data.storagePath == resource.data.storagePath &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['caption', 'updatedAt']) && validCaption();
+        allow delete: if self(uid) && resource.data.ownerUid == uid;
+      }
+
+      match /displaySettings/{deviceId}/slots/{slotId} {
+        allow read: if self(uid);
+        allow create, update: if self(uid) && validPersonalSlot(uid);
+        allow delete: if self(uid);
+      }
+      match /favorites/{mediaId} {
+        allow read, write: if self(uid);
+      }
+      match /deviceTokens/{tokenId} {
+        allow read: if false;
+        allow create: if self(uid) && request.resource.data.keys().hasOnly(['token', 'updatedAt']) &&
+          request.resource.data.token is string && request.resource.data.token.size() <= 4096;
+        allow update: if self(uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['token', 'updatedAt']) &&
+          request.resource.data.token is string && request.resource.data.token.size() <= 4096;
+        allow delete: if self(uid);
+      }
+    }
+
+    match /couples/{coupleId} {
+      allow read: if activeMember(coupleId);
+      allow create, update, delete: if false;
+
+      match /sharedMedia/{mediaId} {
+        allow read: if activeMember(coupleId);
+        allow create: if activeMember(coupleId) &&
+          request.resource.data.keys().hasOnly(['ownerUid', 'caption', 'storagePath', 'thumbnailPath', 'mimeType', 'visibility', 'createdAt', 'updatedAt']) &&
+          request.resource.data.keys().hasAll(['ownerUid', 'caption', 'storagePath', 'thumbnailPath', 'mimeType', 'visibility', 'createdAt', 'updatedAt']) &&
+          request.resource.data.ownerUid == request.auth.uid &&
+          request.resource.data.visibility == 'shared' &&
+          request.resource.data.storagePath == 'couples/' + coupleId + '/shared/' + request.auth.uid + '/' + mediaId + '/original' &&
+          (request.resource.data.thumbnailPath == null || request.resource.data.thumbnailPath == 'couples/' + coupleId + '/shared/' + request.auth.uid + '/' + mediaId + '/thumbnail.jpg') &&
+          request.resource.data.mimeType is string && request.resource.data.mimeType.size() <= 100 &&
+          request.resource.data.createdAt is timestamp && request.resource.data.updatedAt is timestamp &&
+          validCaption();
+        allow update: if activeMember(coupleId) && resource.data.ownerUid == request.auth.uid &&
+          request.resource.data.ownerUid == resource.data.ownerUid &&
+          request.resource.data.storagePath == resource.data.storagePath &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['caption', 'updatedAt']) && validCaption();
+        allow delete: if activeMember(coupleId) && resource.data.ownerUid == request.auth.uid;
+      }
+
+      match /sharedDisplay/slots/items/{slotId} {
+        allow read: if activeMember(coupleId);
+        allow create, update: if activeMember(coupleId) && validSharedSlot(coupleId);
+        allow delete: if activeMember(coupleId);
+      }
+      match /albums/{albumId} {
+        allow read: if activeMember(coupleId);
+        allow create: if activeMember(coupleId) && request.resource.data.ownerUid == request.auth.uid;
+        allow update: if activeMember(coupleId) && resource.data.ownerUid == request.auth.uid && request.resource.data.ownerUid == request.auth.uid;
+        allow delete: if activeMember(coupleId) && resource.data.ownerUid == request.auth.uid;
+      }
+      match /activity/{activityId} {
+        allow read: if activeMember(coupleId);
+        allow create: if activeMember(coupleId) &&
+          request.resource.data.keys().hasOnly(['actorUid', 'type', 'mediaId', 'createdAt']) &&
+          request.resource.data.actorUid == request.auth.uid &&
+          request.resource.data.type is string && request.resource.data.type.size() <= 60 &&
+          (!('mediaId' in request.resource.data) || (request.resource.data.mediaId is string && request.resource.data.mediaId.size() <= 80)) &&
+          request.resource.data.createdAt is timestamp;
+        allow update, delete: if false;
+      }
+    }
+
+    // Invite documents are backend-only; codes are hashed and never queryable by client SDKs.
+    match /pairingCodes/{codeHash} { allow read, write: if false; }
+  }
+}
