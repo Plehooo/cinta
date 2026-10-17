@@ -1,0 +1,46 @@
+name: Android CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Set up Gradle 8.13
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Check source invariants
+        run: python3 scripts/verify-invariants.py
+      - name: Unit tests, lint, and debug APK
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
+        run: >-
+          gradle --no-daemon clean testDebugUnitTest lintDebug assembleDebug
+          -PsupabaseUrl="$SUPABASE_URL"
+          -PsupabasePublishableKey="$SUPABASE_PUBLISHABLE_KEY"
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: cinta-widget-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
