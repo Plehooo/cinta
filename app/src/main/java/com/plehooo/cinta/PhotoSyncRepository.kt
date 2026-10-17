@@ -13,6 +13,8 @@ import io.github.jan.supabase.postgrest.query.filter.FilterOperation
 import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import io.github.jan.supabase.realtime.selectAsFlow
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.cancelAndJoin
@@ -288,6 +290,10 @@ class PhotoSyncRepository(private val context: Context) {
         bucket.list(folder).map { "$folder/${it.name}" }
             .filter { it != keepPath && it.endsWith(".webp") }
             .forEach { bucket.delete(it) }
+    }
+
+    suspend fun registerPushToken(token: String) {
+        supabase.postgrest.rpc("register_device_token", buildJsonObject { put("p_token", token) })
     }
 
     fun photoStatus(uid: String): String =

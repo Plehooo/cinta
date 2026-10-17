@@ -150,6 +150,7 @@ fun CintaHomeNew() {
                     try {
                         members = repository.activeMembers()
                         repository.refreshPartnerPhoto()
+                        PushTokens.sync(context.applicationContext)
                         SyncScheduler.enqueueNow(context.applicationContext)
                     } catch (_: Throwable) {
                     }

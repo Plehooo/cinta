@@ -67,3 +67,12 @@ configurations.all {
         }
     }
 }
+
+// Push (FCM): plugin hanya aktif jika google-services.json ada
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}
+dependencies {
+    implementation(platform("com.google.firebase:firebase-bom:34.3.0"))
+    implementation("com.google.firebase:firebase-messaging")
+}
