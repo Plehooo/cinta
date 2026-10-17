@@ -1,6 +1,7 @@
 package com.plehooo.cinta
 
 import android.graphics.Color
+import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.glance.GlanceId
@@ -53,7 +54,7 @@ class CintaWidget : GlanceAppWidget() {
             Column(
                 modifier = GlanceModifier
                     .fillMaxSize()
-                    .background(ColorProvider(Color.rgb(255, 240, 246)))
+                    .background(ColorProvider(ComposeColor(255, 240, 246)))
                     .cornerRadius(22.dp)
                     .padding(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -69,18 +70,18 @@ class CintaWidget : GlanceAppWidget() {
                     if (wide && caption.isNotBlank()) {
                         Text(
                             text = caption.take(100),
-                            style = TextStyle(color = ColorProvider(Color.rgb(95, 40, 76)), fontWeight = FontWeight.Medium),
+                            style = TextStyle(color = ColorProvider(ComposeColor(95, 40, 76)), fontWeight = FontWeight.Medium),
                             maxLines = 2
                         )
                     }
                     Text(
                         text = "♥  ${if (version > 0) "Tersinkron" else "Tersimpan"}",
-                        style = TextStyle(color = ColorProvider(Color.rgb(164, 52, 105)), fontWeight = FontWeight.Medium)
+                        style = TextStyle(color = ColorProvider(ComposeColor(164, 52, 105)), fontWeight = FontWeight.Medium)
                     )
                 } else {
-                    Text("♡", style = TextStyle(color = ColorProvider(Color.rgb(200, 82, 137)), fontWeight = FontWeight.Bold))
-                    Text("Foto pasangan", style = TextStyle(color = ColorProvider(Color.rgb(95, 40, 76)), fontWeight = FontWeight.Medium))
-                    Text("Atur di Cinta Widget", style = TextStyle(color = ColorProvider(Color.rgb(120, 95, 110))))
+                    Text("♡", style = TextStyle(color = ColorProvider(ComposeColor(200, 82, 137)), fontWeight = FontWeight.Bold))
+                    Text("Foto pasangan", style = TextStyle(color = ColorProvider(ComposeColor(95, 40, 76)), fontWeight = FontWeight.Medium))
+                    Text("Atur di Cinta Widget", style = TextStyle(color = ColorProvider(ComposeColor(120, 95, 110))))
                 }
             }
         }
