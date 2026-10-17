@@ -1,4 +1,0 @@
-# Public client settings only. These values are not service-role secrets.
-# Configure the same values as GitHub repository variables for Actions builds.
-SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
-SUPABASE_PUBLISHABLE_KEY=YOUR_SUPABASE_PUBLISHABLE_KEY
