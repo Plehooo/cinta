@@ -46,7 +46,7 @@ dependencies {
     implementation("androidx.work:work-runtime-ktx:2.10.1")
     implementation("io.coil-kt:coil-compose:2.7.0")
 
-    implementation(platform("io.github.jan-tennert.supabase:bom:3.8.0"))
+    implementation(platform("io.github.jan-tennert.supabase:bom:3.2.6"))
     implementation("io.github.jan-tennert.supabase:auth-kt")
     implementation("io.github.jan-tennert.supabase:postgrest-kt")
     implementation("io.github.jan-tennert.supabase:storage-kt")
@@ -63,7 +63,7 @@ dependencies {
 configurations.all {
     resolutionStrategy.eachDependency {
         if (requested.group == "org.jetbrains.kotlin" && requested.name.startsWith("kotlin-stdlib")) {
-            useVersion("2.2.0")
+            useVersion("2.2.21")
         }
     }
 }
