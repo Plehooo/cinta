@@ -5,8 +5,11 @@ import android.util.Log
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.annotations.SupabaseExperimental
 import io.github.jan.supabase.postgrest.from
-import io.github.jan.supabase.postgrest.decodeList
-import io.github.jan.supabase.postgrest.decodeAs
+import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.storage.storage
+import io.github.jan.supabase.postgrest.query.filter.FilterOperation
+import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import io.github.jan.supabase.realtime.selectAsFlow
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.cancelAndJoin
@@ -289,10 +292,9 @@ class PhotoSyncRepository(private val context: Context) {
                         val subscription = launch {
                             try {
                                 val changes = client.from("member_photos").selectAsFlow(
-                                    primaryKey = MemberPhoto::photoId
-                                ) {
-                                    eq("owner_uid", route.partnerUid)
-                                }
+                                    primaryKey = MemberPhoto::photoId,
+                                    filter = FilterOperation("owner_uid", FilterOperator.EQ, route.partnerUid)
+                                )
                                 changes.collect {
                                     runCatching { PhotoSyncRepository(appContext).refreshPartnerPhoto() }
                                 }

@@ -1,5 +1,6 @@
 package com.plehooo.cinta
 
+import io.github.jan.supabase.auth.auth
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
