@@ -114,7 +114,7 @@ class PhotoSyncRepository(private val context: Context) {
 
     suspend fun redeemCode(code: String): Boolean {
         val result = supabase.postgrest.rpc("redeem_pairing_code", Json.encodeToJsonElement(RedeemCodeParams(code.trim())).jsonObject)
-            .decodeAs<String?>()
+            .decodeAsOrNull<String>()
         if (result.isNullOrBlank()) return false
         SyncScheduler.enqueueNow(context)
         startRealtimeObserver(context)
