@@ -59,7 +59,7 @@ import kotlinx.coroutines.withContext
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { CintaTheme { CintaHome() } }
+        setContent { CintaTheme { CintaHomeNew() } }
     }
 }
 
