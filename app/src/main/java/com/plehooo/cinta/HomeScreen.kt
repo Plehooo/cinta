@@ -102,7 +102,7 @@ fun CintaHomeNew() {
     var expectedVersion by remember { mutableStateOf(0) }
 
     var showSource by remember { mutableStateOf(false) }
-    var cameraUri by remember { mutableStateOf<Uri?>(null) }
+    var cameraUri by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<Uri?>(null) }
     val savePhoto: (Uri) -> Unit = { uri ->
         previewUri = uri
         scope.launch {
@@ -116,8 +116,8 @@ fun CintaHomeNew() {
                     ?: error("Ruang pasangan tidak tersedia.")
                 repository.queueOwnPhoto(coupleId, bytes, "", expectedVersion)
                 message = "Foto tersimpan dan sedang dikirim ke widget pasanganmu."
-            } catch (_: Throwable) {
-                message = "Foto belum berhasil disimpan. Pastikan sudah terhubung dengan pasangan."
+            } catch (e: Throwable) {
+                message = "Foto belum berhasil disimpan (${e.message}). Pastikan sudah terhubung dengan pasangan."
             } finally {
                 busy = false
             }
@@ -156,8 +156,8 @@ fun CintaHomeNew() {
                         ?: error("Ruang pasangan tidak tersedia.")
                     repository.queueOwnPhoto(coupleId, bytes, "", expectedVersion)
                     message = "Foto tersimpan dan sedang dikirim ke widget pasanganmu."
-                } catch (_: Throwable) {
-                    message = "Foto belum berhasil disimpan. Pastikan sudah terhubung dengan pasangan."
+                } catch (e: Throwable) {
+                    message = "Foto belum berhasil disimpan (${e.message}). Pastikan sudah terhubung dengan pasangan."
                 } finally {
                     busy = false
                 }
@@ -202,6 +202,25 @@ fun CintaHomeNew() {
             throw e
         } catch (_: Throwable) {
             message = "Sesi belum dapat dibaca. Periksa koneksi internet."
+        }
+    }
+
+    LaunchedEffect(userId) {
+        if (userId == null) return@LaunchedEffect
+        while (true) {
+            kotlinx.coroutines.delay(10_000)
+            try {
+                val fresh = repository.activeMembers()
+                val key = { l: List<CoupleMember> -> l.map { it.coupleId + ":" + it.userId }.toSet() }
+                if (key(fresh) != key(members)) {
+                    members = fresh
+                    runCatching { repository.refreshPartnerPhoto() }
+                    if (fresh.none { it.userId == userId }) { previewUri = null; inviteCode = null }
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Throwable) {
+            }
         }
     }
 

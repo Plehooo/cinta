@@ -46,6 +46,7 @@ object WidgetCache {
 
     suspend fun clearPartnerCaches(context: Context) = withContext(Dispatchers.IO) {
         PhotoFiles.cacheDirectory(context).listFiles()?.forEach { it.delete() }
+        context.getSharedPreferences("partner-photo-cache", Context.MODE_PRIVATE).edit().clear().apply()
         val manager = GlanceAppWidgetManager(context)
         manager.getGlanceIds(CintaWidget::class.java).forEach { glanceId ->
             updateAppWidgetState(context, glanceId) { state ->

@@ -102,6 +102,7 @@ class PhotoSyncRepository(private val context: Context) {
 
     suspend fun createCouple(): String {
         val id = supabase.postgrest.rpc("create_couple").decodeAs<String>()
+        resetOwnPhotoState()
         SyncScheduler.enqueueNow(context)
         return id
     }
@@ -119,6 +120,8 @@ class PhotoSyncRepository(private val context: Context) {
         val result = supabase.postgrest.rpc("redeem_pairing_code", Json.encodeToJsonElement(RedeemCodeParams(code.trim())).jsonObject)
             .decodeAsOrNull<String>()
         if (result.isNullOrBlank()) return false
+        resetOwnPhotoState()
+        runCatching { activeMembers(); refreshPartnerPhoto() }
         SyncScheduler.enqueueNow(context)
         startRealtimeObserver(context)
         return true
@@ -148,9 +151,7 @@ class PhotoSyncRepository(private val context: Context) {
     suspend fun publishQueuedOwnPhoto(): UploadOutcome = withContext(Dispatchers.IO) {
         val uid = currentUid() ?: return@withContext UploadOutcome.RETRY
         val queued = PhotoQueue.readMetadata(context, uid) ?: return@withContext UploadOutcome.NOTHING
-        if (settings.getString("own-photo-error:$uid", null) == "conflict") {
-            return@withContext UploadOutcome.PERMANENT_FAILURE
-        }
+        settings.edit().remove("own-photo-error:$uid").apply()
         val bytes = PhotoQueue.readImage(context, uid) ?: return@withContext UploadOutcome.PERMANENT_FAILURE
         if (queued.ownerUid != uid) return@withContext UploadOutcome.PERMANENT_FAILURE
 
@@ -187,7 +188,7 @@ class PhotoSyncRepository(private val context: Context) {
                     objectPath = objectPath,
                     caption = queued.caption.ifBlank { null },
                     contentHash = queuedHash,
-                    expectedVersion = queued.expectedVersion
+                    expectedVersion = oldOwnPhoto?.version ?: 0
                 )).jsonObject
             ).decodeList<MemberPhoto>()
             val published = result.firstOrNull() ?: error("Server tidak mengonfirmasi metadata foto.")
@@ -252,18 +253,32 @@ class PhotoSyncRepository(private val context: Context) {
         WidgetCache.rememberCache(context, partnerUid, partnerPhoto)
     }
 
+    private fun resetOwnPhotoState() {
+        val uid = currentUid() ?: return
+        settings.edit().remove("own-version:$uid").remove("own-photo-error:$uid")
+            .remove("own-photo-status:$uid").apply()
+    }
+
     suspend fun leaveCouple() {
         val uid = currentUid() ?: error("Silakan login kembali.")
+        // Hentikan upload tertunda supaya tidak balapan dengan proses putus.
+        androidx.work.WorkManager.getInstance(context).cancelUniqueWork("cinta-photo-sync-now")
+        PhotoQueue.clear(context, uid)
         runCatching {
-            val own = supabase.from("member_photos").select().decodeList<MemberPhoto>()
-                .firstOrNull { it.ownerUid == uid }
-            if (own != null) supabase.storage.from("couple-photos").delete(own.objectPath)
+            val coupleId = supabase.from("member_photos").select().decodeList<MemberPhoto>()
+                .firstOrNull { it.ownerUid == uid }?.coupleId ?: settings.getString("last-couple:$uid", null)
+            if (coupleId != null) {
+                val bucket = supabase.storage.from("couple-photos")
+                val folder = "$coupleId/$uid"
+                bucket.list(folder).map { "$folder/${it.name}" }.filter { it.endsWith(".webp") }
+                    .forEach { path -> runCatching { bucket.delete(path) } }
+            }
         }
         supabase.postgrest.rpc("leave_couple")
         PhotoQueue.clear(context, uid)
         WidgetCache.clearPartnerCaches(context)
         settings.edit().remove("last-couple:$uid").remove("last-partner:$uid")
-            .remove("own-photo-error:$uid").putString("own-photo-status:$uid", "Pasangan terputus").apply()
+            .remove("own-photo-error:$uid").remove("own-version:$uid").remove("own-photo-status:$uid").apply()
     }
 
     suspend fun sendResetCode(email: String) {
