@@ -6,3 +6,4 @@ local.properties
 *.keystore
 .idea/
 .DS_Store
+*adminsdk*.json

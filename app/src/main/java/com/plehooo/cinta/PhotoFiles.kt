@@ -32,10 +32,11 @@ object PhotoFiles {
 
         var sample = 1
         while (maxOf(bounds.outWidth / sample, bounds.outHeight / sample) > MAX_EDGE * 2) sample *= 2
-        val source = resolver.openInputStream(uri).use { input ->
+        val decoded = resolver.openInputStream(uri).use { input ->
             requireNotNull(input) { "Foto tidak dapat dibuka." }
             BitmapFactory.decodeStream(input, null, BitmapFactory.Options().apply { inSampleSize = sample })
         } ?: error("File foto tidak valid atau tidak didukung.")
+        val source = rotateByExif(context, uri, decoded)
 
         var resized: Bitmap? = null
         try {
@@ -67,6 +68,29 @@ object PhotoFiles {
             resized?.takeIf { it !== source }?.recycle()
             source.recycle()
         }
+    }
+
+    private fun rotateByExif(context: Context, uri: Uri, bitmap: Bitmap): Bitmap {
+        val degrees = try {
+            context.contentResolver.openInputStream(uri).use { input ->
+                if (input == null) 0 else when (android.media.ExifInterface(input).getAttributeInt(
+                    android.media.ExifInterface.TAG_ORIENTATION,
+                    android.media.ExifInterface.ORIENTATION_NORMAL
+                )) {
+                    android.media.ExifInterface.ORIENTATION_ROTATE_90 -> 90
+                    android.media.ExifInterface.ORIENTATION_ROTATE_180 -> 180
+                    android.media.ExifInterface.ORIENTATION_ROTATE_270 -> 270
+                    else -> 0
+                }
+            }
+        } catch (_: Throwable) {
+            0
+        }
+        if (degrees == 0) return bitmap
+        val matrix = android.graphics.Matrix().apply { postRotate(degrees.toFloat()) }
+        val rotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+        if (rotated !== bitmap) bitmap.recycle()
+        return rotated
     }
 
     fun pendingDirectory(context: Context): File = File(context.filesDir, "photo-queue").apply { mkdirs() }

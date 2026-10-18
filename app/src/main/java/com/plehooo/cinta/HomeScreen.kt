@@ -101,6 +101,45 @@ fun CintaHomeNew() {
     var showJoin by remember { mutableStateOf(false) }
     var expectedVersion by remember { mutableStateOf(0) }
 
+    var showSource by remember { mutableStateOf(false) }
+    var cameraUri by remember { mutableStateOf<Uri?>(null) }
+    val savePhoto: (Uri) -> Unit = { uri ->
+        previewUri = uri
+        scope.launch {
+            busy = true
+            message = "Menyimpan foto…"
+            try {
+                val uid = userId ?: error("Belum siap.")
+                val bytes = withContext(Dispatchers.IO) { PhotoFiles.encodeWebp(context, uri) }
+                val coupleId = repository.cachedActiveMembers(uid)
+                    .firstOrNull { it.userId == uid && it.leftAt == null }?.coupleId
+                    ?: error("Ruang pasangan tidak tersedia.")
+                repository.queueOwnPhoto(coupleId, bytes, "", expectedVersion)
+                message = "Foto tersimpan dan sedang dikirim ke widget pasanganmu."
+            } catch (_: Throwable) {
+                message = "Foto belum berhasil disimpan. Pastikan sudah terhubung dengan pasangan."
+            } finally {
+                busy = false
+            }
+        }
+    }
+    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
+        val taken = cameraUri
+        if (ok && taken != null) savePhoto(taken)
+    }
+    val launchCamera: () -> Unit = {
+        try {
+            val dir = java.io.File(context.cacheDir, "camera").apply { mkdirs() }
+            dir.listFiles()?.forEach { it.delete() }
+            val file = java.io.File.createTempFile("cinta_", ".jpg", dir)
+            val uri = androidx.core.content.FileProvider.getUriForFile(context, context.packageName + ".fileprovider", file)
+            cameraUri = uri
+            cameraLauncher.launch(uri)
+        } catch (_: Throwable) {
+            message = "Kamera tidak tersedia di HP ini."
+        }
+    }
+
     val photoPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
@@ -313,7 +352,7 @@ fun CintaHomeNew() {
                             onClick = {
                                 scope.launch {
                                     expectedVersion = repository.ownPhotoVersionOrCached(userId!!)
-                                    photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                                    showSource = true
                                 }
                             },
                             modifier = Modifier.fillMaxWidth().height(52.dp)
@@ -359,6 +398,26 @@ fun CintaHomeNew() {
                 }
             }
         }
+    }
+
+    if (showSource) {
+        AlertDialog(
+            onDismissRequest = { showSource = false },
+            title = { Text("Ambil foto dari") },
+            text = { Text("Pilih sumber foto untuk dikirim ke pasanganmu.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showSource = false
+                    launchCamera()
+                }) { Text("📷 Kamera") }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showSource = false
+                    photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                }) { Text("🖼️ Galeri") }
+            }
+        )
     }
 
     if (confirmJoin) {
