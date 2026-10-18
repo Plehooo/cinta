@@ -384,6 +384,11 @@ fun CintaHomeNew() {
                     CintaCard {
                         Text("Pasangan terhubung ❤️", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                         Text("Foto pasangan otomatis tampil di widget HP-mu.", color = Muted)
+                        Text(
+                            "Push terakhir: " + (context.getSharedPreferences("cinta-local-state", Context.MODE_PRIVATE).getString("last-push", null) ?: "belum ada"),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Muted
+                        )
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
                             TextButton(
                                 enabled = !busy,

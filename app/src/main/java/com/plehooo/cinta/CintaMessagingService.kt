@@ -30,6 +30,12 @@ class CintaMessagingService : FirebaseMessagingService() {
                 false
             }
         }
+        ctx.getSharedPreferences("cinta-local-state", android.content.Context.MODE_PRIVATE).edit()
+            .putString(
+                "last-push",
+                java.text.SimpleDateFormat("dd/MM HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date()) +
+                    if (ok) " (foto ditarik)" else " (gagal, dijadwalkan ulang)"
+            ).apply()
         if (!ok) SyncScheduler.enqueueNow(ctx)
     }
 }
