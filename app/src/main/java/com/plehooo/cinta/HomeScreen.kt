@@ -385,21 +385,6 @@ fun CintaHomeNew() {
                         Text("Pasangan terhubung ❤️", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                         Text("Foto pasangan otomatis tampil di widget HP-mu.", color = Muted)
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                            OutlinedButton(
-                                enabled = !busy,
-                                onClick = {
-                                    scope.launch {
-                                        busy = true
-                                        try {
-                                            repository.refreshPartnerPhoto()
-                                            message = "Sudah yang terbaru."
-                                        } catch (_: Throwable) {
-                                            message = "Belum tersambung ke server."
-                                        } finally { busy = false }
-                                    }
-                                },
-                                modifier = Modifier.weight(1f).height(48.dp)
-                            ) { Text("Segarkan") }
                             TextButton(
                                 enabled = !busy,
                                 onClick = { confirmLeave = true },
