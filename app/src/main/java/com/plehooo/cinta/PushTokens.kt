@@ -41,7 +41,7 @@ object PushTokens {
 
             val token = currentToken() ?: return@withLock
             val repo = PhotoSyncRepository(app)
-            val uid = repo.currentUid() ?: return@withLock
+            val uid = repo.awaitUid() ?: return@withLock
             val marker = "$uid:$token"
             // Sudah terdaftar untuk akun + token ini: lewati. Gagal -> dicoba lagi nanti.
             if (prefs.getString("fcm-registered", null) == marker) return@withLock

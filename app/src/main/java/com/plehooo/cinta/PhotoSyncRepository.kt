@@ -58,6 +58,12 @@ class PhotoSyncRepository(private val context: Context) {
 
     fun currentUid(): String? = supabase.auth.currentUserOrNull()?.id
 
+    /** Tunggu sesi tersimpan selesai dimuat: penting saat proses dihidupkan oleh push/worker (aplikasi tertutup). */
+    suspend fun awaitUid(): String? {
+        kotlinx.coroutines.withTimeoutOrNull(10_000) { supabase.auth.awaitInitialization() }
+        return currentUid()
+    }
+
     suspend fun activeMembers(): List<CoupleMember> {
         val active = supabase.from("couple_members").select().decodeList<CoupleMember>()
             .filter { it.leftAt == null }

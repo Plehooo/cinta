@@ -105,7 +105,7 @@ class RealtimeService : Service() {
         syncLock.withLock {
             try {
                 val repo = PhotoSyncRepository(applicationContext)
-                if (repo.currentUid() != null) repo.refreshPartnerPhoto()
+                if (repo.awaitUid() != null) repo.refreshPartnerPhoto()
             } catch (_: Throwable) {
             }
         }

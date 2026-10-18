@@ -22,8 +22,10 @@ class CintaMessagingService : FirebaseMessagingService() {
         val ok = runBlocking(Dispatchers.IO) {
             try {
                 val repo = PhotoSyncRepository(ctx)
-                if (repo.currentUid() != null) repo.refreshPartnerPhoto()
-                true
+                if (repo.awaitUid() != null) {
+                    repo.refreshPartnerPhoto()
+                    true
+                } else false
             } catch (_: Throwable) {
                 false
             }

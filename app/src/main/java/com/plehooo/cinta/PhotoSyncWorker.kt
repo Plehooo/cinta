@@ -9,7 +9,7 @@ class PhotoSyncWorker(context: Context, params: WorkerParameters) : CoroutineWor
         if (!SupabaseProvider.configured) return Result.failure()
         return try {
             val repository = PhotoSyncRepository(applicationContext)
-            val uid = repository.currentUid() ?: return if (PhotoQueue.hasAnyPending(applicationContext)) Result.retry() else Result.success()
+            val uid = repository.awaitUid() ?: return if (PhotoQueue.hasAnyPending(applicationContext)) Result.retry() else Result.success()
             if (PhotoQueue.hasPending(applicationContext, uid)) {
                 when (repository.publishQueuedOwnPhoto()) {
                     UploadOutcome.RETRY -> return Result.retry()
