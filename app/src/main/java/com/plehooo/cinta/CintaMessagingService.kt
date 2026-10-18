@@ -16,7 +16,8 @@ class CintaMessagingService : FirebaseMessagingService() {
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
-        if (message.data["type"] != "photo") return
+        val type = message.data["type"]
+        if (type != null && type != "photo") return
         val ctx = applicationContext
         val ok = runBlocking(Dispatchers.IO) {
             try {

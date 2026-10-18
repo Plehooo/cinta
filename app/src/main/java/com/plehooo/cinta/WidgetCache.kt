@@ -59,6 +59,38 @@ object WidgetCache {
         }
     }
 
+    fun newestCachedFile(context: Context): File? =
+        PhotoFiles.cacheDirectory(context).listFiles()
+            ?.filter { it.isFile && it.length() > 0L && it.name.startsWith("partner-") && it.name.endsWith(".webp") }
+            ?.maxByOrNull { it.lastModified() }
+
+    /** Samakan state semua widget dengan cache di disk (widget baru dipasang / state hilang). */
+    suspend fun applyCacheToWidgets(context: Context) = withContext(Dispatchers.IO) {
+        val file = newestCachedFile(context) ?: return@withContext
+        val partnerUid = file.name.removePrefix("partner-").removeSuffix(".webp")
+        val prefs = context.getSharedPreferences("partner-photo-cache", Context.MODE_PRIVATE)
+        val version = prefs.getInt("version:$partnerUid", 0)
+        val hash = prefs.getString("hash:$partnerUid", null).orEmpty()
+        val photoId = prefs.getString("id:$partnerUid", null).orEmpty()
+        val manager = GlanceAppWidgetManager(context)
+        manager.getGlanceIds(CintaWidget::class.java).forEach { glanceId ->
+            var changed = false
+            updateAppWidgetState(context, glanceId) { state ->
+                if (state[photoPathKey] != file.absolutePath ||
+                    state[versionKey] != version ||
+                    state[contentHashKey] != hash
+                ) {
+                    state[photoPathKey] = file.absolutePath
+                    state[versionKey] = version
+                    state[photoIdKey] = photoId
+                    state[contentHashKey] = hash
+                    changed = true
+                }
+            }
+            if (changed) CintaWidget().update(context, glanceId)
+        }
+    }
+
     fun cacheMatches(context: Context, partnerUid: String, photo: MemberPhoto): Boolean {
         val localFile = PhotoFiles.partnerPhotoCache(context, partnerUid)
         if (!localFile.isFile || localFile.length() == 0L) return false

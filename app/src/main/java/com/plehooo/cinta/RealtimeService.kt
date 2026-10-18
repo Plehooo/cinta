@@ -7,6 +7,7 @@ import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.ServiceInfo
 import android.net.ConnectivityManager
 import android.net.Network
@@ -28,6 +29,7 @@ class RealtimeService : Service() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val syncLock = Mutex()
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
+    private var screenReceiver: BroadcastReceiver? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -50,9 +52,10 @@ class RealtimeService : Service() {
             startForeground(NOTIF_ID, notification)
         }
         registerNetworkWatcher()
+        registerScreenWatcher()
         scope.launch {
             while (isActive) {
-                delay(60_000)
+                delay(30_000)
                 refreshNow()
             }
         }
@@ -77,6 +80,27 @@ class RealtimeService : Service() {
         }
     }
 
+    // Layar menyala / dibuka kuncinya: tarik foto terbaru seketika supaya widget sudah baru saat dilihat.
+    private fun registerScreenWatcher() {
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent?) {
+                scope.launch {
+                    PhotoSyncRepository.startRealtimeObserver(applicationContext)
+                    refreshNow()
+                }
+            }
+        }
+        val filter = IntentFilter().apply {
+            addAction(Intent.ACTION_SCREEN_ON)
+            addAction(Intent.ACTION_USER_PRESENT)
+        }
+        try {
+            ContextCompat.registerReceiver(this, receiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
+            screenReceiver = receiver
+        } catch (_: Throwable) {
+        }
+    }
+
     private suspend fun refreshNow() {
         syncLock.withLock {
             try {
@@ -94,6 +118,10 @@ class RealtimeService : Service() {
     }
 
     override fun onDestroy() {
+        try {
+            screenReceiver?.let { unregisterReceiver(it) }
+        } catch (_: Throwable) {
+        }
         try {
             networkCallback?.let { getSystemService(ConnectivityManager::class.java)?.unregisterNetworkCallback(it) }
         } catch (_: Throwable) {

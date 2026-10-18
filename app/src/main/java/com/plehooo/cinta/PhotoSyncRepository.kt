@@ -238,7 +238,11 @@ class PhotoSyncRepository(private val context: Context) {
                 it.coupleId == route.coupleId && PhotoRouting.canAffectWidget(route, it.ownerUid)
             }
             ?: return@withContext // Keep last valid cache on transient/empty metadata responses.
-        if (WidgetCache.cacheMatches(context, partnerUid, partnerPhoto)) return@withContext
+        if (WidgetCache.cacheMatches(context, partnerUid, partnerPhoto)) {
+            // Cache sudah mutakhir, tapi pastikan widget (termasuk yang baru dipasang) ikut mutakhir.
+            WidgetCache.applyCacheToWidgets(context)
+            return@withContext
+        }
 
         val bytes = supabase.storage.from("couple-photos").downloadAuthenticated(partnerPhoto.objectPath)
         if (bytes.isEmpty() || bytes.size > 512 * 1024) return@withContext

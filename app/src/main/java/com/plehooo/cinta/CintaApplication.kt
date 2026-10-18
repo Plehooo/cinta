@@ -12,6 +12,7 @@ class CintaApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         SyncScheduler.schedule(this)
+        if (SupabaseProvider.configured) RealtimeService.start(this)
     }
 }
 
@@ -22,11 +23,12 @@ object SyncScheduler {
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
-        val request = PeriodicWorkRequestBuilder<PhotoSyncWorker>(6, TimeUnit.HOURS)
+        // 15 menit = interval minimum WorkManager; UPDATE supaya instalasi lama (6 jam) ikut berubah.
+        val request = PeriodicWorkRequestBuilder<PhotoSyncWorker>(15, TimeUnit.MINUTES)
             .setConstraints(constraints)
             .build()
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-            WORK_NAME, ExistingPeriodicWorkPolicy.KEEP, request
+            WORK_NAME, ExistingPeriodicWorkPolicy.UPDATE, request
         )
     }
 

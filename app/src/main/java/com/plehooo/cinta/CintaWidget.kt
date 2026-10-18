@@ -41,13 +41,17 @@ class CintaWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: android.content.Context, id: GlanceId) {
         provideContent {
             val state = currentState<Preferences>()
-            val path = state[stringPreferencesKey("partner_photo_path")].orEmpty()
+            val storedPath = state[stringPreferencesKey("partner_photo_path")].orEmpty()
+            // Kalau state widget kosong/hilang, tetap tampilkan foto terbaru dari cache disk.
+            val path = storedPath.takeIf { it.isNotBlank() && File(it).isFile }
+                ?: WidgetCache.newestCachedFile(context)?.absolutePath.orEmpty()
+            val stamp = path.takeIf { it.isNotBlank() }?.let { File(it).lastModified() } ?: 0L
             val version = state[intPreferencesKey("partner_photo_version")] ?: 0
             val hash = state[stringPreferencesKey("partner_photo_hash")].orEmpty()
             val size = LocalSize.current
             val aspect = (size.width.value / size.height.value.coerceAtLeast(1f)).coerceIn(0.4f, 3f)
             val key = (aspect * 100).toInt()
-            val bitmap = remember(path, version, hash, key) {
+            val bitmap = remember(path, version, hash, key, stamp) {
                 path.takeIf { it.isNotBlank() }
                     ?.let(::File)
                     ?.takeIf { it.isFile && it.length() > 0L }
