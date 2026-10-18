@@ -13,7 +13,12 @@
           "package_name": "com.bittv.iptv"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "834553102006-8ajbcfk085er3bddp0rtiij6s7i3agvr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDuZRdcpxaBnlo_dtoJYVNfV1WqkjE1bKI"
@@ -21,7 +26,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "834553102006-8ajbcfk085er3bddp0rtiij6s7i3agvr.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     },
@@ -32,7 +42,12 @@
           "package_name": "com.bittv.iptv.debug"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "834553102006-8ajbcfk085er3bddp0rtiij6s7i3agvr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDuZRdcpxaBnlo_dtoJYVNfV1WqkjE1bKI"
@@ -40,7 +55,41 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "834553102006-8ajbcfk085er3bddp0rtiij6s7i3agvr.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:834553102006:android:b5c4440ab86148a4f73017",
+        "android_client_info": {
+          "package_name": "com.plehooo.cinta"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "834553102006-8ajbcfk085er3bddp0rtiij6s7i3agvr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDuZRdcpxaBnlo_dtoJYVNfV1WqkjE1bKI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "834553102006-8ajbcfk085er3bddp0rtiij6s7i3agvr.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     },
@@ -51,7 +100,12 @@
           "package_name": "com.plehooo.galericinta"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "834553102006-8ajbcfk085er3bddp0rtiij6s7i3agvr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDuZRdcpxaBnlo_dtoJYVNfV1WqkjE1bKI"
@@ -59,7 +113,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "834553102006-8ajbcfk085er3bddp0rtiij6s7i3agvr.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
