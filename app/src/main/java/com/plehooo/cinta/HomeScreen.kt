@@ -395,6 +395,8 @@ fun CintaHomeNew() {
                 }
             }
 
+            PermissionsCard()
+
             Card(colors = CardDefaults.cardColors(containerColor = SoftPink), shape = RoundedCornerShape(18.dp)) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text("Pasang widget", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
