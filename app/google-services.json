@@ -1,124 +1,26 @@
 {
   "project_info": {
-    "project_number": "834553102006",
-    "firebase_url": "https://idtzhah-default-rtdb.firebaseio.com",
-    "project_id": "idtzhah",
-    "storage_bucket": "idtzhah.firebasestorage.app"
+    "project_number": "555478966871",
+    "project_id": "planning-with-ai-f5efd",
+    "storage_bucket": "planning-with-ai-f5efd.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:834553102006:android:76b758e83f7ef00cf73017",
-        "android_client_info": {
-          "package_name": "com.bittv.iptv"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "834553102006-8ajbcfk085er3bddp0rtiij6s7i3agvr.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyDuZRdcpxaBnlo_dtoJYVNfV1WqkjE1bKI"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "834553102006-8ajbcfk085er3bddp0rtiij6s7i3agvr.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:834553102006:android:69ef58c919e4a771f73017",
-        "android_client_info": {
-          "package_name": "com.bittv.iptv.debug"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "834553102006-8ajbcfk085er3bddp0rtiij6s7i3agvr.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyDuZRdcpxaBnlo_dtoJYVNfV1WqkjE1bKI"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "834553102006-8ajbcfk085er3bddp0rtiij6s7i3agvr.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:834553102006:android:b5c4440ab86148a4f73017",
+        "mobilesdk_app_id": "1:555478966871:android:b421f644d1fc07d2787912",
         "android_client_info": {
           "package_name": "com.plehooo.cinta"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "834553102006-8ajbcfk085er3bddp0rtiij6s7i3agvr.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDuZRdcpxaBnlo_dtoJYVNfV1WqkjE1bKI"
+          "current_key": "AIzaSyCkyyXQD5jsMFqxZtCwd_wDMYr8y3TSvMc"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "834553102006-8ajbcfk085er3bddp0rtiij6s7i3agvr.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:834553102006:android:29d4d1d5d57def00f73017",
-        "android_client_info": {
-          "package_name": "com.plehooo.galericinta"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "834553102006-8ajbcfk085er3bddp0rtiij6s7i3agvr.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyDuZRdcpxaBnlo_dtoJYVNfV1WqkjE1bKI"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "834553102006-8ajbcfk085er3bddp0rtiij6s7i3agvr.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     }
