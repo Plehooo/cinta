@@ -216,7 +216,7 @@ class PhotoSyncRepository(private val context: Context) {
             } else {
                 // On an ambiguous network failure, keep the uploaded object: the RPC may have committed
                 // even if its response was lost. The idempotent hash check above reconciles on retry.
-                settings.edit().putString("own-photo-status:$uid", "Offline/gagal terhubung — foto aman di antrean")
+                settings.edit().putString("own-photo-status:$uid", "Gagal kirim: " + error.javaClass.simpleName + " " + message.take(160))
                     .apply()
                 Log.w("CintaPhotoSync", "Photo upload deferred (${error.javaClass.simpleName})")
                 UploadOutcome.RETRY
